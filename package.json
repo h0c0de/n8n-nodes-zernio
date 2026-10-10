@@ -5,11 +5,11 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc && npm run copy-assets",
-    "copy-assets": "cp late/zernio-logo.svg dist/late/ && cp late/late-logo.svg dist/late/",
+    "copy-assets": "node scripts/copy-assets.mjs",
     "dev": "tsc --watch",
     "lint": "eslint --ext .ts .",
     "lintfix": "eslint --ext .ts . --fix",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test",
     "prepack": "npm run build && npm run lint"
   },
   "keywords": [
@@ -56,10 +56,12 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/LateNode.credentials.js"
+      "dist/credentials/LateNode.credentials.js",
+      "dist/credentials/FreeAi.credentials.js"
     ],
     "nodes": [
-      "dist/late/Late.node.js"
+      "dist/late/Late.node.js",
+      "dist/freeai/FreeAi.node.js"
     ]
   },
   "files": [

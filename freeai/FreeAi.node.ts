@@ -5,36 +5,30 @@ import type {
   INodeTypeDescription,
 } from "n8n-workflow";
 import { NodeConnectionType } from "n8n-workflow";
+import {
+  FAILOVER_OPTION,
+  FAILOVER_ORDER,
+  FAILOVER_VALUE,
+  PROVIDER_OPTIONS,
+  PROVIDERS,
+  type ProviderDef,
+} from "./providers.generated";
 
-type ProviderId = "ovh" | "llm7" | "openrouter";
-
-const PROVIDERS: Record<
-  ProviderId,
-  { name: string; base: string; model: string; needsKey: boolean }
-> = {
-  ovh: {
-    name: "OVHcloud (anonim, 2 RPM/IP)",
-    base: "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
-    model: "gpt-oss-20b",
-    needsKey: false,
-  },
-  llm7: {
-    name: "LLM7.io (anonim)",
-    base: "https://api.llm7.io/v1",
-    model: "DeepSeek-V4-Flash-0731",
-    needsKey: false,
-  },
-  openrouter: {
-    name: "OpenRouter (butuh API key)",
-    base: "https://openrouter.ai/api/v1",
-    model: "openrouter/free",
-    needsKey: true,
-  },
-};
-
-const FAILOVER_ORDER: ProviderId[] = ["ovh", "llm7", "openrouter"];
+// Daftar provider TIDAK ditulis di sini: dibaca dari providers.json milik
+// free-ai-probe lewat scripts/gen-providers.mjs (lihat FREEAI.md).
+type ProviderId = string;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Kunci API untuk satu provider. Kunci per-provider dari environment
+ * (mis. TIP_API_KEY, NETRAUX_API_KEY) didahulukan karena spesifik, lalu
+ * kredensial n8n "Free AI API" sebagai cadangan generik.
+ */
+function resolveApiKey(p: ProviderDef, credentialKey: string): string {
+  const envKey = p.keyEnv ? process.env[p.keyEnv] : undefined;
+  return (envKey ?? "").trim() || credentialKey || "";
+}
 
 interface UpstreamResult {
   ok: boolean;
@@ -47,13 +41,13 @@ interface UpstreamResult {
 
 export class FreeAi implements INodeType {
   description: INodeTypeDescription = {
-    displayName: "Free AI (OVH / LLM7 / OpenRouter)",
+    displayName: "Free AI (free-tier failover)",
     name: "freeAi",
     icon: "file:zernio-logo.svg",
     group: ["transform"],
     version: 1,
     description:
-      "Generate text dengan provider AI free-tier: OVHcloud dan LLM7.io anonim tanpa API key, OpenRouter dengan key. Termasuk failover otomatis antar provider.",
+      "Generate text dengan provider AI free-tier. Daftar provider dan rantai failover dibaca dari providers.json free-ai-probe (npm run gen-providers), jadi tidak ada salinan yang bisa basi.",
     defaults: {
       name: "Free AI",
     },
@@ -72,29 +66,8 @@ export class FreeAi implements INodeType {
         displayName: "Provider",
         name: "provider",
         type: "options",
-        default: "failover3",
-        options: [
-          {
-            name: "Failover 3 (OVH → LLM7 → OpenRouter)",
-            value: "failover3",
-            description: "Coba tiap provider berurutan sampai ada yang sukses",
-          },
-          {
-            name: "OVHcloud (anonim)",
-            value: "ovh",
-            description: "gpt-oss-20b, tanpa key, 2 request/menit per IP",
-          },
-          {
-            name: "LLM7.io (anonim)",
-            value: "llm7",
-            description: "DeepSeek-V4-Flash, tanpa key",
-          },
-          {
-            name: "OpenRouter (free pool)",
-            value: "openrouter",
-            description: "openrouter/free, butuh API key di kredensial",
-          },
-        ],
+        default: FAILOVER_VALUE,
+        options: [FAILOVER_OPTION, ...PROVIDER_OPTIONS],
         description: "Provider free-tier yang dipakai",
       },
       {
@@ -165,9 +138,9 @@ export class FreeAi implements INodeType {
       }
 
       const order: ProviderId[] =
-        providerChoice === "failover3"
+        providerChoice === FAILOVER_VALUE
           ? FAILOVER_ORDER
-          : [providerChoice as ProviderId];
+          : [providerChoice];
 
       const messages: { role: string; content: string }[] = [];
       if (system) messages.push({ role: "system", content: system });
@@ -214,8 +187,11 @@ async function callWithFailover(
     for (const pid of order) {
       const p = PROVIDERS[pid];
       if (!p) continue;
-      if (p.needsKey && !req.apiKey) {
-        errors.push(`${pid}: butuh API key di kredensial Free AI`);
+      const apiKey = resolveApiKey(p, req.apiKey);
+      if (p.needsKey && !apiKey) {
+        errors.push(
+          `${pid}: butuh API key — set env ${p.keyEnv} atau isi kredensial Free AI`
+        );
         continue;
       }
 
@@ -228,7 +204,7 @@ async function callWithFailover(
             url: `${p.base}/chat/completions`,
             headers: {
               "Content-Type": "application/json",
-              ...(req.apiKey ? { Authorization: `Bearer ${req.apiKey}` } : {}),
+              ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
             },
             body: {
               model: p.model,

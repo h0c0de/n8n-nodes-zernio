@@ -6,11 +6,13 @@
   "scripts": {
     "build": "tsc && npm run copy-assets",
     "copy-assets": "node scripts/copy-assets.mjs",
+    "gen-providers": "node scripts/gen-providers.mjs",
+    "check-providers": "node scripts/gen-providers.mjs --check",
     "dev": "tsc --watch",
     "lint": "eslint --ext .ts .",
     "lintfix": "eslint --ext .ts . --fix",
     "test": "node --test",
-    "prepack": "npm run build && npm run lint"
+    "prepack": "npm run check-providers && npm run build && npm run lint"
   },
   "keywords": [
     "n8n-community-node-package",

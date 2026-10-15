@@ -1,15 +1,22 @@
 import type { ICredentialType, INodeProperties } from "n8n-workflow";
 
 /**
- * API key opsional - hanya dibutuhkan oleh provider OpenRouter.
- * Provider OVHcloud dan LLM7.io berjalan anonim tanpa key.
+ * API key opsional - dibutuhkan oleh provider ber-key (OpenRouter, TipRouter,
+ * ArzaStore, CleanAPIs, Netraux, Jeroker). Provider anonim (ovh, llm7, kilo)
+ * berjalan tanpa key.
+ *
+ * Node ini lebih dulu membaca kunci per-provider dari environment sesuai
+ * providers.json (mis. OPENROUTER_API_KEY, TIP_API_KEY, NETRAUX_API_KEY), lalu
+ * baru memakai nilai di field ini sebagai cadangan. Urutan itu penting karena
+ * tiap provider butuh kunci berbeda sedangkan kredensial n8n hanya punya satu
+ * field - isi field ini kalau kamu hanya memakai satu provider ber-key.
  */
 export class FreeAiApi implements ICredentialType {
   name = "freeAiApi";
 
-  displayName = "Free AI API (OpenRouter, opsional)";
+  displayName = "Free AI API (opsional)";
 
-  documentationUrl = "https://openrouter.ai/docs";
+  documentationUrl = "https://github.com/zernio-dev/n8n-nodes-zernio#readme";
 
   properties: INodeProperties[] = [
     {
@@ -20,10 +27,10 @@ export class FreeAiApi implements ICredentialType {
       default: "",
       required: false,
       description:
-        "Hanya untuk provider OpenRouter (openrouter/free). Kosongkan jika memakai OVHcloud atau LLM7.io yang anonim.",
+        "Cadangan generik untuk provider ber-key. Kunci per-provider dari environment (mis. OPENROUTER_API_KEY, TIP_API_KEY, NETRAUX_API_KEY) didahulukan. Kosongkan kalau hanya memakai provider anonim (ovh, llm7, kilo).",
     },
   ];
 
-  // Tidak ada `authenticate`: header Authorization dibangun manual di node
-  // (hanya provider OpenRouter yang butuh key, OVH/LLM7 anonim).
+  // Tidak ada `authenticate`: header Authorization dibangun manual di node,
+  // karena tiap provider ber-key memakai env-nya sendiri kalau tersedia.
 }

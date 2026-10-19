@@ -2,7 +2,7 @@
  * AUTO-GENERATED — JANGAN edit file ini secara manual.
  *
  * Sumber     : providers.json (free-ai-probe)
- * SHA-256    : 0b4f024e8da05fcc2acd9c0f0aa0c8e01ccf539b04dfce723a5d595d7afc4d7e
+ * SHA-256    : 3e968d504be3de58cd3e19ec657d09c3eafd69bb3f36f78b0ef7e655560e0aeb
  * Dihasilkan : scripts/gen-providers.mjs
  * Regenerate : npm run gen-providers
  * Periksa    : npm run check-providers
@@ -83,6 +83,13 @@ export const PROVIDERS: Record<string, ProviderDef> = {
     keyEnv: "JEROKER_API_KEY",
     needsKey: true,
   },
+  ghrocx: {
+    name: "Ghrocx",
+    base: "https://api.ghrocx.my.id/v1",
+    model: "ghrocx/sonnet-5",
+    keyEnv: "GHROCX_API_KEY",
+    needsKey: true,
+  },
   kilo: {
     name: "Kilo Code gateway",
     base: "https://api.kilo.ai/api/gateway",
@@ -145,6 +152,11 @@ export const PROVIDER_OPTIONS: ProviderOption[] = [
     name: "Jerouter (Jeroker)",
     value: "jeroker",
     description: "auto — butuh API key (JEROKER_API_KEY)",
+  },
+  {
+    name: "Ghrocx",
+    value: "ghrocx",
+    description: "ghrocx/sonnet-5 — butuh API key (GHROCX_API_KEY)",
   },
   {
     name: "Kilo Code gateway (anonim)",

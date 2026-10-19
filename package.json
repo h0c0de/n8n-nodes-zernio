@@ -8,6 +8,7 @@
     "copy-assets": "node scripts/copy-assets.mjs",
     "gen-providers": "node scripts/gen-providers.mjs",
     "check-providers": "node scripts/gen-providers.mjs --check",
+    "sync-providers": "node scripts/sync-providers.mjs && npm run build && npm test",
     "dev": "tsc --watch",
     "lint": "eslint --ext .ts .",
     "lintfix": "eslint --ext .ts . --fix",

@@ -109,6 +109,13 @@
       "key_env": "JEROKER_API_KEY"
     },
     {
+      "id": "ghrocx",
+      "name": "Ghrocx",
+      "base": "https://api.ghrocx.my.id/v1",
+      "model": "ghrocx/sonnet-5",
+      "key_env": "GHROCX_API_KEY"
+    },
+    {
       "id": "kilo",
       "name": "Kilo Code gateway",
       "probe_name": "Kilo Code gateway (anonim)",

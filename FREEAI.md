@@ -34,6 +34,7 @@ free-ai-probe/providers.json  ──salin──▶  freeai/providers.json   (di-
 |----------|--------|
 | `npm run gen-providers` | tulis ulang `freeai/providers.generated.ts` dari `providers.json` |
 | `npm run check-providers` | gagal kalau file hasil generate **basi** terhadap sumbernya |
+| `npm run sync-providers` | salin `providers.json` dari free-ai-probe, lalu regenerate + build + test |
 
 `check-providers` ikut berjalan di `prepack`, jadi mempublikasikan daftar yang basi
 akan ketahuan saat build — termasuk di CI, karena salinan `freeai/providers.json`
@@ -62,6 +63,35 @@ npm run gen-providers && npm run build
 
 Dropdown Provider, rantai failover, dan labelnya semuanya ikut sendiri.
 
+### Sinkronisasi antar-repo
+
+Kalau `free-ai-probe/providers.json` sudah berubah, satu perintah menyalinnya
+ke repo ini, me-regenerate, lalu memverifikasi semuanya:
+
+```bash
+npm run sync-providers
+```
+
+Urutannya: validasi sumber (JSON valid, provider core ada, id unik, semua id
+failover dikenal — salinan lokal **tidak pernah** ditimpa sebelum lolos
+validasi) → salin atomis → `gen-providers` → `check-providers` → `build` →
+`test`. Langkah yang gagal menghentikan perintah dengan exit code bukan-nol;
+kalau sumber berubah, skrip melaporkan delta provider/failover dan sha256
+sebelum menimpa.
+
+Penting — dua perintah membaca sumber berbeda:
+
+- `gen-providers` / `check-providers` → salinan **lokal** `freeai/providers.json`
+  (urutan: argumen → `FREEAI_PROVIDERS_FILE` → salinan lokal)
+- `sync-providers` → sumber **hulu** (urutan: argumen → `FREEAI_PROVIDERS_FILE`
+  → `C:/free-ai-probe/providers.json`)
+
+Sumber eksplisit yang tidak ada membuat keduanya **gagal**, bukan diam-diam
+memakai file lain.
+
+Di PR, `.github/workflows/ci.yml` menjalankan `check-providers` + `build` +
+`test` otomatis, jadi daftar basi ketahuan tanpa dijalankan manual.
+
 ## Kunci API
 
 Dua sumber, dengan urutan prioritas:
@@ -85,8 +115,9 @@ ber-key, isi env masing-masing supaya tiap provider menerima kunci yang benar.
 | `tip` | ya | `TIP_API_KEY` |
 | `arzastore` | ya | `ARZASTORE_API_KEY` |
 | `cleanapis` | ya | `CLEANAPIS_API_KEY` |
-| `netraux` | ya | `NETRAUX_API_KEY` |
-| `jeroker` | ya | `JEROKER_API_KEY` |
+|| `netraux` | ya | `NETRAUX_API_KEY` |
+|| `jeroker` | ya | `JEROKER_API_KEY` |
+|| `ghrocx` | ya | `GHROCX_API_KEY` |
 
 Tabel ini menggambarkan `providers.json` saat ini. Provider ber-key yang env-nya
 kosong **dilewati** dengan catatan di field `error` keluaran node, bukan digagalkan.

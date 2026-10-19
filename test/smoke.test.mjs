@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -134,4 +135,29 @@ test("provider generated masih sinkron dengan providers.json free-ai-probe", () 
     assert.equal(g.keyEnv, keyEnv, `${p.id}: keyEnv beda`);
     assert.equal(g.needsKey, keyEnv !== null, `${p.id}: needsKey beda`);
   }
+});
+
+test("sync-providers gagal keras tanpa sumber eksplisit dan tidak menyentuh salinan lokal", () => {
+  const pkg = JSON.parse(
+    readFileSync(path.resolve(root, "package.json"), "utf8")
+  );
+  assert.ok(pkg.scripts?.["sync-providers"], "package.json tanpa skrip sync-providers");
+
+  const local = path.resolve(root, "freeai", "providers.json");
+  const before = readFileSync(local, "utf8");
+
+  const res = spawnSync(
+    process.execPath,
+    [path.resolve(root, "scripts", "sync-providers.mjs"),
+     path.resolve(root, "freeai", "__sumber_tidak_ada__.json")],
+    { encoding: "utf8" }
+  );
+
+  assert.notEqual(res.status, 0, "harus exit != 0 saat sumber eksplisit tidak ada");
+  assert.match(res.stderr, /tidak ada/i, "pesan error harus menyebut sumber tidak ada");
+  assert.equal(
+    readFileSync(local, "utf8"),
+    before,
+    "salinan lokal tidak boleh berubah saat sumber bermasalah"
+  );
 });

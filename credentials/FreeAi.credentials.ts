@@ -11,7 +11,7 @@ import type { ICredentialType, INodeProperties } from "n8n-workflow";
  * tiap provider butuh kunci berbeda sedangkan kredensial n8n hanya punya satu
  * field - isi field ini kalau kamu hanya memakai satu provider ber-key.
  */
-export class FreeAiApi implements ICredentialType {
+export class FreeAi implements ICredentialType {
   name = "freeAiApi";
 
   displayName = "Free AI API (opsional)";

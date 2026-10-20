@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.0] - 2026-10-20
+
+### Changes
+- fix(scripts): netralkan CRLF pada check-providers
+- style(late): rapikan pemisah baris pada daftar resource
+- fix(late): escape segmen teks statis pada ekspresi campuran
+- perf(late): hapus dynamic import redundan di hook
+- test(late): regresi route tanpa prefix /v1 ganda
+- ci: tambah workflow CI dan security gate pre-push
+- test: tambah harness kontrak FreeAi dan multi-item Late
+- refactor(freeai): samakan nama kelas kredential dengan nama file
+- feat(providers): tambah provider ghrocx dan skrip sync-providers
+- feat(freeai): hasilkan daftar provider via codegen
+- feat: add freeAi node, smoke test, and cross-platform copy-assets
+
+
 ## [0.8.0] - 2026-06-29
 
 ### Changes

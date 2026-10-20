@@ -68,7 +68,12 @@ function buildContent(raw) {
     );
   }
 
-  const digest = crypto.createHash("sha256").update(raw).digest("hex");
+  // Normalisasi CRLF -> LF: hash harus identik di checkout Windows
+  // (core.autocrlf=true) maupun Linux, sehingga --check tidak pernah
+  // melaporkan BASI semu akibat perbedaan line ending saja.
+  const digest = crypto.createHash("sha256")
+    .update(raw.replace(/\r\n/g, "\n"))
+    .digest("hex");
 
   const providerEntries = providers
     .map((p) => {
@@ -184,7 +189,9 @@ try {
   process.exit(1);
 }
 
-const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, "utf8") : null;
+const current = fs.existsSync(OUT)
+  ? fs.readFileSync(OUT, "utf8").replace(/\r\n/g, "\n")
+  : null;
 
 if (check) {
   if (current === null) {
